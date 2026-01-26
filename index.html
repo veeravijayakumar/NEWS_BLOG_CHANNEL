@@ -1,0 +1,1031 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NexusLive | Global AI News Network</title>
+    <style>
+        :root {
+            --bg-dark: #050505;
+            --bg-panel: #111111;
+            --accent: #00ff9d;
+            --accent-glow: rgba(0, 255, 157, 0.2);
+            --text-white: #ffffff;
+            --text-gray: #888;
+            --border: #222;
+            --danger: #ff4444;
+            --panel-bg: rgba(10, 10, 10, 0.95);
+            --whatsapp-green: #25D366;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: var(--bg-dark); color: var(--text-white); font-family: 'Segoe UI', Roboto, sans-serif; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
+
+        /* --- Header & Navigation --- */
+        header {
+            height: 70px;
+            background: #000;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 30px;
+            z-index: 100;
+            flex-shrink: 0;
+        }
+
+        .brand { font-weight: 800; letter-spacing: 1px; text-transform: uppercase; font-size: 1.2rem; display: flex; align-items: center; gap: 8px; cursor: pointer; }
+        .brand span { color: var(--accent); }
+        
+        nav { display: flex; gap: 30px; }
+        .nav-link {
+            text-decoration: none;
+            color: var(--text-gray);
+            font-size: 0.9rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            transition: 0.3s;
+            position: relative;
+        }
+        .nav-link:hover, .nav-link.active { color: var(--accent); }
+        .nav-link.active::after {
+            content: ''; position: absolute; bottom: -24px; left: 0; width: 100%; height: 2px; background: var(--accent);
+        }
+
+        /* --- Controls Area --- */
+        .controls-wrapper {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .status-bar { display: flex; gap: 15px; font-size: 0.75rem; font-family: monospace; color: var(--text-gray); align-items: center; }
+        
+        .live-tag { color: var(--danger); font-weight: bold; display: flex; align-items: center; gap: 5px; white-space: nowrap; }
+        .live-dot { width: 8px; height: 8px; background: var(--danger); border-radius: 50%; animation: blink 1s infinite; }
+        .refresh-status { color: var(--accent); font-size: 0.7rem; opacity: 0; transition: opacity 0.5s; white-space: nowrap; }
+        .refresh-status.visible { opacity: 1; }
+        @keyframes blink { 50% { opacity: 0; } }
+
+        /* Toggles & Selects */
+        .toggle-wrap {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            user-select: none;
+        }
+        .toggle-label {
+            color: var(--text-gray);
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+        }
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 34px;
+            height: 18px;
+        }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #333;
+            transition: .4s;
+            border-radius: 20px;
+            border: 1px solid #444;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 12px;
+            width: 12px;
+            left: 3px;
+            bottom: 2px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .slider { background-color: var(--accent); border-color: var(--accent); }
+        input:checked + .slider:before { transform: translateX(16px); }
+        input:focus + .slider { box-shadow: 0 0 1px var(--accent); }
+
+        /* New: Refresh Timeline Select */
+        .refresh-select-wrap {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .refresh-select {
+            background: #1a1a1a;
+            color: var(--text-white);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            padding: 4px 8px;
+            font-size: 0.75rem;
+            outline: none;
+            cursor: pointer;
+            font-family: monospace;
+        }
+        .refresh-select:focus { border-color: var(--accent); }
+
+        /* --- Page Layout System --- */
+        .page-view {
+            display: none;
+            flex:1;
+            height: calc(100vh - 70px);
+            overflow-y: auto;
+            animation: fadeIn 0.5s ease;
+        }
+        .page-view.active { display: flex; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        /* ================= FLOATING WHATSAPP BUTTON ================= */
+        .whatsapp-float {
+            position: fixed;
+            width: 60px;
+            height: 60px;
+            bottom: 40px;
+            right: 40px;
+            background-color: var(--whatsapp-green);
+            color: #FFF;
+            border-radius: 50px;
+            text-align: center;
+            font-size: 30px;
+            box-shadow: 2px 2px 3px #999;
+            z-index: 200;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: 0.3s;
+            text-decoration: none;
+        }
+        .whatsapp-float:hover {
+            background-color: #128C7E;
+            transform: scale(1.1);
+            box-shadow: 0 0 15px var(--whatsapp-green);
+        }
+
+        /* ================= PAGE: HOME (DASHBOARD) ================= */
+        .dashboard-container {
+            display: grid;
+            grid-template-columns: 320px 1fr;
+            width: 100%;
+            height: 100%;
+        }
+
+        .sidebar {
+            background: var(--bg-panel);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            z-index: 20;
+            flex-shrink: 0;
+        }
+
+        .filter-section { padding: 15px; border-bottom: 1px solid var(--border); }
+        .select-wrapper { position: relative; width: 100%; }
+        .custom-select {
+            width: 100%; background: #1a1a1a; border: 1px solid var(--border); color: var(--text-white);
+            padding: 10px; border-radius: 6px; font-size: 0.9rem; outline: none; cursor: pointer; appearance: none;
+        }
+        .custom-select:focus { border-color: var(--accent); }
+        .select-arrow { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); pointer-events: none; color: var(--accent); }
+
+        .category-tabs { display: flex; padding: 10px; gap: 5px; border-bottom: 1px solid var(--border); overflow-x: auto; }
+        .tab {
+            background: transparent; border: 1px solid var(--border); color: var(--text-gray); padding: 6px 12px;
+            border-radius: 20px; font-size: 0.75rem; cursor: pointer; white-space: nowrap; transition: 0.2s; flex: 1; text-align: center;
+        }
+        .tab:hover, .tab.active { background: var(--accent); color: #000; border-color: var(--accent); }
+
+        .news-list { flex: 1; overflow-y: auto; padding: 10px; scroll-behavior: smooth; }
+        @keyframes slideIn { from { opacity: 0; transform: translateX(-20px); } to { opacity: 1; transform: translateX(0); } }
+        .news-item {
+            display: flex; gap: 10px; padding: 10px; border-radius: 8px; margin-bottom: 8px; cursor: pointer;
+            transition: background 0.2s; background: #1a1a1a; border: 1px solid transparent; animation: slideIn 0.5s ease-out;
+        }
+        .news-item:nth-child(1) { border-left: 3px solid var(--accent); background: #1f1f1f; }
+        
+        .news-item.new-item { background: var(--new-bg); border: 1px solid var(--accent); }
+        .news-item:hover { background: #222; }
+        .news-item.active { border-color: var(--accent); background: #222; box-shadow: 0 0 10px var(--accent-glow); }
+        .item-thumb { width: 80px; height: 60px; background: #333; border-radius: 4px; object-fit: cover; flex-shrink: 0; }
+        .item-content { display: flex; flex-direction: column; justify-content: center; }
+        .item-meta { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
+        .item-source { font-size: 0.65rem; color: var(--accent); font-weight: bold; text-transform: uppercase; }
+        .breaking-tag { font-size: 0.6rem; color: var(--danger); font-weight: 900; letter-spacing: 0.5px; display: none; }
+        .news-item.new-item .breaking-tag { display: block; }
+        .item-title { font-size: 0.85rem; font-weight: 600; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        .empty-state { text-align: center; padding: 40px 20px; color: #444; font-size: 0.9rem; }
+
+        /* Stage (Broadcast) */
+        .stage {
+            position: relative; background: #000; overflow: hidden; display: flex; flex-direction: column;
+        }
+        .video-bg-layer {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-size: cover;
+            background-position: center; opacity: 0.3; transition: background-image 0.5s ease-in-out; z-index: 1;
+            transform: scale(1.05); animation: slowZoom 30s infinite linear;
+        }
+        @keyframes slowZoom { 0% { transform: scale(1); } 100% { transform: scale(1.1); } }
+        .overlay-gradient {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(to right, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.2) 50%, rgba(0,0,0,0.6) 100%); z-index: 2;
+        }
+        .broadcast-content {
+            position: relative; z-index: 10; flex: 1; display: grid; grid-template-columns: 1fr 300px;
+            padding: 40px; gap: 40px; align-items: center;
+        }
+        .news-info { padding-right: 20px; }
+        .info-tag { background: var(--accent); color: #000; padding: 4px 10px; font-size: 0.8rem; font-weight: bold; display: inline-block; margin-bottom: 15px; border-radius: 2px; }
+        .news-headline { font-size: 3rem; font-weight: 800; line-height: 1.1; margin-bottom: 20px; text-shadow: 0 4px 10px rgba(0,0,0,0.5); min-height: 130px; }
+        .brief-box {
+            background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(10px); border-left: 4px solid var(--accent);
+            padding: 20px; max-width: 600px;
+        }
+        .brief-title { color: var(--text-gray); font-size: 0.8rem; text-transform: uppercase; margin-bottom: 8px; letter-spacing: 1px; }
+        .brief-text { font-size: 1.1rem; line-height: 1.6; color: #ddd; margin-bottom: 15px; }
+        
+        .action-buttons { display: flex; gap: 10px; flex-wrap: wrap; }
+        
+        .btn-action {
+            background: transparent; border: 1px solid var(--accent); color: var(--accent); padding: 8px 16px;
+            font-size: 0.9rem; cursor: pointer; border-radius: 4px; transition: all 0.3s; display: inline-flex; align-items: center; gap: 8px; text-decoration: none;
+        }
+        .btn-action:hover { background: var(--accent); color: #000; }
+        
+        .btn-whatsapp { border-color: var(--whatsapp-green); color: var(--whatsapp-green); }
+        .btn-whatsapp:hover { background: var(--whatsapp-green); color: #fff; }
+
+        .anchor-container { display: flex; flex-direction: column; align-items: center; position: relative; }
+        .anchor-wrapper {
+            width: 280px; height: 380px; border-radius: 12px; overflow: hidden; position: relative;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); background: #000;
+        }
+        .anchor-img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s ease; }
+        .anchor-container:hover .anchor-img { transform: scale(1.02); }
+        .audio-overlay {
+            position: absolute; bottom: 20px; left: 20px; right: 20px; height: 40px; background: rgba(0,0,0,0.7);
+            border-radius: 20px; display: flex; align-items: center; justify-content: center; gap: 4px;
+        }
+        .bar { width: 6px; height: 6px; background: var(--accent); border-radius: 3px; opacity: 0.5; transition: 0.1s; }
+        .anchor-container.speaking .bar { animation: sound 0.4s infinite ease-in-out; }
+        .anchor-container.speaking .bar:nth-child(2) { animation-delay: 0.05s; }
+        .anchor-container.speaking .bar:nth-child(3) { animation-delay: 0.1s; }
+        .anchor-container.speaking .bar:nth-child(4) { animation-delay: 0.15s; }
+        .anchor-container.speaking .bar:nth-child(5) { animation-delay: 0.2s; }
+        .anchor-container.speaking .bar:nth-child(6) { animation-delay: 0.25s; }
+        @keyframes sound { 0%, 100% { height: 6px; opacity: 0.5; } 50% { height: 25px; opacity: 1; } }
+        .anchor-name { margin-top: 15px; font-size: 1.2rem; font-weight: 700; background: linear-gradient(to right, #fff, #888); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .anchor-role { font-size: 0.8rem; color: var(--accent); letter-spacing: 1px; }
+        .controls-bar {
+            height: 60px; background: rgba(0,0,0,0.8); border-top: 1px solid var(--border); display: flex;
+            align-items: center; justify-content: center; gap: 20px; z-index: 20; backdrop-filter: blur(5px);
+        }
+        .ctrl-btn {
+            background: transparent; border: 1px solid var(--border); color: #fff; width: 40px; height: 40px;
+            border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s;
+        }
+        .ctrl-btn:hover { background: #fff; color: #000; }
+        .play-btn { width: 50px; height: 50px; background: var(--accent); border: none; color: #000; }
+        .play-btn:hover { background: #fff; }
+
+        /* Detail Panel */
+        .detail-panel {
+            position: absolute; top: 0; right: -100%; width: 60%; height: 100%; background: var(--panel-bg);
+            backdrop-filter: blur(20px); border-left: 1px solid var(--accent); z-index: 40;
+            transition: right 0.4s cubic-bezier(0.16, 1, 0.3, 1); display: flex; flex-direction: column; padding: 40px;
+            box-shadow: -10px 0 50px rgba(0,0,0,0.8);
+        }
+        .detail-panel.active { right: 0; }
+        .detail-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; padding-bottom: 20px; margin-bottom: 20px; }
+        .close-btn { background: none; border: none; color: #fff; font-size: 2rem; cursor: pointer; line-height: 1; }
+        .close-btn:hover { color: var(--danger); }
+        .detail-image { width: 100%; height: 250px; object-fit: cover; border-radius: 8px; margin-bottom: 20px; border: 1px solid #333; }
+        .detail-content { overflow-y: auto; flex: 1; padding-right: 20px; }
+        .detail-content h2 { color: var(--accent); margin-bottom: 15px; font-size: 1.5rem; }
+        .detail-text { column-count: 2; column-gap: 40px; column-rule: 1px solid #333; line-height: 1.8; color: #ccc; font-size: 1rem; }
+
+        /* ================= PAGE: ABOUT, TESTIMONIALS, CONTACT ================= */
+        .page-content-wrapper {
+            width: 100%; max-width: 1200px; margin: 0 auto; padding: 40px;
+        }
+        .page-header { font-size: 2.5rem; color: var(--accent); margin-bottom: 40px; text-align: center; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; }
+        
+        .text-section { line-height: 1.8; color: #ccc; margin-bottom: 30px; text-align: justify; }
+        .text-section p { margin-bottom: 20px; }
+
+        .card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-top: 30px; }
+        .card {
+            background: rgba(255,255,255,0.05); border: 1px solid #333; padding: 30px; border-radius: 8px;
+            transition: 0.3s; position: relative; overflow: hidden;
+        }
+        .card:hover { border-color: var(--accent); transform: translateY(-5px); box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        
+        .stars { color: var(--accent); margin-bottom: 15px; }
+        .quote { font-style: italic; margin-bottom: 20px; color: #fff; }
+        .author { font-weight: bold; color: var(--text-gray); font-size: 0.9rem; text-transform: uppercase; }
+
+        /* Contact Form */
+        .contact-form { max-width: 600px; margin: 0 auto; background: rgba(0,0,0,0.5); padding: 40px; border-radius: 12px; border: 1px solid #333; }
+        .form-group { margin-bottom: 25px; }
+        .form-group label { display: block; margin-bottom: 8px; color: var(--accent); font-size: 0.9rem; text-transform: uppercase; }
+        .form-input, .form-textarea {
+            width: 100%; background: rgba(255,255,255,0.05); border: none; border-bottom: 2px solid #333;
+            color: #fff; padding: 15px; font-size: 1rem; outline: none; transition: 0.3s; font-family: inherit;
+        }
+        .form-input:focus, .form-textarea:focus { border-bottom-color: var(--accent); background: rgba(255,255,255,0.1); }
+        .form-textarea { resize: vertical; min-height: 120px; }
+        .submit-btn {
+            width: 100%; background: var(--whatsapp-green); color: #fff; border: none; padding: 15px; font-size: 1rem;
+            font-weight: bold; border-radius: 6px; cursor: pointer; text-transform: uppercase; letter-spacing: 1px;
+            transition: 0.3s; display: flex; align-items: center; justify-content: center; gap: 10px;
+        }
+        .submit-btn:hover { background: #128C7E; transform: translateY(-2px); }
+
+        /* Mobile Responsive */
+        @media (max-width: 900px) {
+            .dashboard-container { grid-template-columns: 1fr; grid-template-rows: 1fr 1fr; }
+            .sidebar { order: 2; border-top: 1px solid var(--border); }
+            .broadcast-content { grid-template-columns: 1fr; padding: 20px; text-align: center; }
+            .anchor-wrapper { width: 150px; height: 200px; margin: 0 auto; }
+            .news-headline { font-size: 1.8rem; }
+            .brief-box { margin: 20px auto; }
+            .detail-panel { width: 90%; }
+            .detail-text { column-count: 1; }
+            .whatsapp-float { width: 50px; height: 50px; bottom: 20px; right: 20px; font-size: 25px; }
+            
+            /* Responsive Header Controls */
+            .controls-wrapper { flex-direction: column; gap: 10px; align-items: flex-end; }
+            .toggle-wrap, .refresh-select-wrap { justify-content: flex-end; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header -->
+    <header>
+        <div class="brand" onclick="switchPage('home')">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1 4-10z"/></svg>
+            Nexus<span>Live</span>
+        </div>
+        <nav>
+            <a href="#" class="nav-link active" onclick="switchPage('home', this)">Home</a>
+            <a href="#" class="nav-link" onclick="switchPage('about', this)">About</a>
+            <a href="#" class="nav-link" onclick="switchPage('testimonials', this)">Testimonials</a>
+            <a href="#" class="nav-link" onclick="switchPage('contact', this)">Contact</a>
+        </nav>
+        
+        <!-- Top Right Status Bar with Toggles -->
+        <div class="controls-wrapper">
+            <div class="status-bar">
+                <div id="clock">00:00:00</div>
+                <div class="refresh-status" id="refreshStatus">UPDATED</div>
+                <div class="live-tag"><div class="live-dot"></div> LIVE <span id="region-display">GLOBAL</span></div>
+            </div>
+
+            <!-- Toggle 1: AI Read -->
+            <label class="toggle-wrap" title="Enable/Disable AI Voice Reading">
+                <span class="toggle-label">AI Read</span>
+                <div class="switch">
+                    <input type="checkbox" id="aiReadToggle" checked onchange="toggleAIRead()">
+                    <span class="slider"></span>
+                </div>
+            </label>
+
+            <!-- Toggle 2: Auto Refresh + Dropdown -->
+            <div class="refresh-select-wrap" title="Set Refresh Speed">
+                <label class="toggle-wrap" style="gap: 4px;">
+                    <span class="toggle-label">Auto Refresh</span>
+                    <div class="switch">
+                        <input type="checkbox" id="autoRefreshToggle" checked onchange="toggleAutoRefresh()">
+                        <span class="slider"></span>
+                    </div>
+                </label>
+                <select id="refreshRate" class="refresh-select" onchange="updateRefreshRate()">
+                    <option value="10000">10 sec</option>
+                    <option value="60000">1 min</option>
+                    <option value="300000">5 min</option>
+                    <option value="1800000">30 min</option>
+                    <option value="3600000">1 hour</option>
+                    <option value="18000000">5 hours</option>
+                </select>
+            </div>
+        </div>
+    </header>
+
+    <!-- PAGE: HOME -->
+    <div id="home" class="page-view active">
+        <div class="dashboard-container">
+            <aside class="sidebar">
+                <div class="filter-section">
+                    <div class="select-wrapper">
+                        <select id="countrySelect" class="custom-select" onchange="handleCountryChange()">
+                            <option value="Global">🌍 Global</option>
+                            <option value="USA">🇺🇸 USA</option>
+                            <option value="UK">🇬🇧 UK</option>
+                            <option value="India">🇮🇳 India</option>
+                            <option value="Japan">🇯🇵 Japan</option>
+                            <option value="Germany">🇩🇪 Germany</option>
+                        </select>
+                        <div class="select-arrow">▼</div>
+                    </div>
+                </div>
+
+                <div class="category-tabs">
+                    <button class="tab active" onclick="handleCategoryChange('All', this)">All</button>
+                    <button class="tab" onclick="handleCategoryChange('World', this)">World</button>
+                    <button class="tab" onclick="handleCategoryChange('Tech', this)">Tech</button>
+                    <button class="tab" onclick="handleCategoryChange('Business', this)">Business</button>
+                    <button class="tab" onclick="handleCategoryChange('Sports', this)">Sports</button>
+                </div>
+                
+                <div class="news-list" id="newsList">
+                    <!-- Populated by JS -->
+                </div>
+            </aside>
+
+            <main class="stage">
+                <div class="video-bg-layer" id="bgLayer"></div>
+                <div class="overlay-gradient"></div>
+
+                <div class="broadcast-content">
+                    <div class="news-info">
+                        <div class="info-tag" id="displaySource">REUTERS</div>
+                        <h1 class="news-headline" id="displayTitle">Welcome to NexusLive AI</h1>
+                        
+                        <div class="brief-box">
+                            <div class="brief-title">Brief Summary</div>
+                            <div class="brief-text" id="displaySummary">
+                                Select a region and category to begin the localized AI broadcast.
+                            </div>
+                            
+                            <!-- Action Buttons -->
+                            <div class="action-buttons">
+                                <button class="btn-action" onclick="openDetailPanel()">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+                                    Read Full Analysis
+                                </button>
+                                <!-- Share on WhatsApp Button -->
+                                <button class="btn-action btn-whatsapp" onclick="shareStoryWhatsApp()" title="Share on WhatsApp">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.008-.57-.008-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+                                    Share
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="anchor-container" id="anchorContainer">
+                        <div class="anchor-wrapper">
+                            <img src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80" class="anchor-img" id="anchorImg" alt="AI Anchor">
+                            <div class="audio-overlay">
+                                <div class="bar"></div><div class="bar"></div><div class="bar"></div>
+                                <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+                            </div>
+                        </div>
+                        <div class="anchor-name">Sarah Nexus</div>
+                        <div class="anchor-role">AI PRESENTER</div>
+                    </div>
+                </div>
+
+                <!-- Detailed Panel -->
+                <div class="detail-panel" id="detailPanel">
+                    <div class="detail-header">
+                        <h2>Deep Analysis</h2>
+                        <button class="close-btn" onclick="closeDetailPanel()">×</button>
+                    </div>
+                    <img src="" id="detailImage" class="detail-image" alt="Detail">
+                    <div class="detail-content">
+                        <div id="detailText" class="detail-text"></div>
+                    </div>
+                </div>
+
+                <div class="controls-bar">
+                    <button class="ctrl-btn" onclick="prevNews()" title="Previous Story">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+                    </button>
+                    <button class="ctrl-btn play-btn" id="playBtn" onclick="togglePlay()" title="Play/Pause Broadcast">
+                        <svg id="iconPlay" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                        <svg id="iconPause" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" style="display:none;"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>
+                    </button>
+                    <button class="ctrl-btn" onclick="nextNews()" title="Next Story">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+                    </button>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- PAGE: ABOUT -->
+    <div id="about" class="page-view">
+        <div class="page-content-wrapper">
+            <h1 class="page-header">About NexusLive</h1>
+            <div class="text-section">
+                <p>NexusLive is a next-generation AI-powered news aggregator that revolutionizes how you consume information. By consolidating feeds from global sources—Reuters, BBC, Al Jazeera, and more—we create a unified, real-time news experience.</p>
+                <p>Our core technology utilizes advanced neural networks to synthesize voiceovers and generate contextual imagery on the fly, providing a "Live TV" experience entirely within your browser. We believe in democratizing access to information, offering personalized feeds based on your location and interests.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- PAGE: TESTIMONIALS -->
+    <div id="testimonials" class="page-view">
+        <div class="page-content-wrapper">
+            <h1 class="page-header">User Reviews</h1>
+            <div class="card-grid">
+                <div class="card">
+                    <div class="stars">★★★★★</div>
+                    <div class="quote">"The AI reader is incredibly realistic. I love how I can just select a country and get local news instantly. The brief analysis feature is a lifesaver."</div>
+                    <div class="author">- Alex D., USA</div>
+                </div>
+                <div class="card">
+                    <div class="stars">★★★★★</div>
+                    <div class="quote">"Finally, a news site that feels like future. The auto-refresh feature ensures I never miss a headline."</div>
+                    <div class="author">- Priya S., India</div>
+                </div>
+                <div class="card">
+                    <div class="stars">★★★★☆</div>
+                    <div class="quote">"Great interface and WhatsApp sharing feature makes it easy to send news to my family. Very impressed."</div>
+                    <div class="author">- Michael R., UK</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PAGE: CONTACT -->
+    <div id="contact" class="page-view">
+        <div class="page-content-wrapper">
+            <h1 class="page-header">Contact Us</h1>
+            <p style="text-align: center; color: #888; margin-bottom: 30px;">Have questions or feedback? Send us a message directly on WhatsApp.</p>
+            
+            <div class="contact-form">
+                <div class="form-group">
+                    <label>Your Name</label>
+                    <input type="text" id="c_name" class="form-input" placeholder="John Doe">
+                </div>
+                <div class="form-group">
+                    <label>Your Message</label>
+                    <textarea id="c_msg" class="form-textarea" placeholder="I have a suggestion..."></textarea>
+                </div>
+                <button class="submit-btn" onclick="sendContactWhatsApp()">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.008-.57-.008-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+                    Send via WhatsApp
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Floating WhatsApp Icon -->
+    <a href="https://wa.me/1234567890" class="whatsapp-float" target="_blank">
+        <svg width="35" height="35" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.008-.57-.008-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+    </a>
+
+    <script>
+        // --- State Management ---
+        let allNewsData = [];
+        let filteredList = [];
+        let currentIndex = 0;
+        let isPlaying = false;
+        let synth = window.speechSynthesis;
+        let utterance = null;
+        
+        let currentCountry = 'Global';
+        let currentCategory = 'All';
+
+        // NEW: Toggle State Variables
+        let isAIReadEnabled = true; // AI Voice On/Off
+        let isAutoRefreshEnabled = true; // Feed Refresh On/Off
+        let refreshIntervalId = null; // To track the timer
+        let currentRefreshRate = 10000; // Default 10 seconds
+
+        // --- Data Generators ---
+        const sources = ["Reuters", "BBC", "CNN", "Al Jazeera", "AP News", "Bloomberg", "TechCrunch", "ESPN", "NDTV", "NHK", "DW"];
+        const categories = ["World", "Tech", "Business", "Sports"];
+        const countries = ["USA", "UK", "India", "Japan", "Germany", "Global"];
+        
+        const templates = [
+            { cat: "Tech", title: "Revolutionary {Subject} technology announced in {Country}.", summary: "Industry leaders in {Country} have unveiled a breakthrough in {Subject}. Analysts predict a massive shift in local market." },
+            { cat: "World", title: "Global {Subject} Summit reaches historic agreement in {Country}.", summary: "Delegates have signed a new treaty regarding {Subject} in capital of {Country}. This marks a turning point in international relations." },
+            { cat: "Business", title: "{Country} stock markets rally as {Subject} sector booms.", summary: "Investors in {Country} are rushing to buy shares in {Subject} sector after positive quarterly reports." },
+            { cat: "Sports", title: "Championship upset: {Country} team takes {Subject} trophy.", summary: "In a stunning turn of events, underdog team from {Country} secured victory against reigning champions." }
+        ];
+
+        const subjects = ["AI Security", "Quantum Computing", "Climate Action", "Renewable Energy", "Cyber Defense", "Space Exploration", "Fintech", "Robotics"];
+
+        function generateDetailedContent(subject, country) {
+            return `
+                <strong>Contextual Overview:</strong><br>
+                The recent developments regarding <em>${subject}</em> in ${country} have sent shockwaves through the industry. Experts believe this is not just a temporary trend, but a fundamental shift in how the region approaches modern infrastructure. <br><br>
+                
+                <strong>Regional Impact:</strong><br>
+                At its core, the advancement in ${subject} solves a decade-old problem related to efficiency and scalability in ${country}. By leveraging new algorithms, engineers have managed to reduce latency by 40%. This opens up possibilities for real-time applications that were previously thought impossible. <br><br>
+
+                <strong>Economic Outlook:</strong><br>
+                Market analysts are forecasting a 15% growth in the sector over the next fiscal year specifically in ${country}. Venture capital firms have already begun pouring billions into startups focused on ${subject}. However, regulatory bodies are warning of potential monopoly concerns if consolidation continues at this pace. <br><br>
+
+                <strong>What's Next:</strong><br>
+                As we look to the future, the integration of ${subject} into daily consumer electronics is the next logical step. Major corporations are expected to announce partnerships by Q3. For the average consumer, this means smarter, faster, and more integrated experiences by the end of the decade.
+            `;
+        }
+
+        function generateNewsItem(isInitial = false) {
+            const template = templates[Math.floor(Math.random() * templates.length)];
+            const subject = subjects[Math.floor(Math.random() * subjects.length)];
+            const source = sources[Math.floor(Math.random() * sources.length)];
+            const seed = Math.random().toString(36).substring(7);
+            const id = Date.now();
+
+            let country = currentCountry;
+            if (currentCountry === 'Global' || Math.random() > 0.7) {
+                country = countries[Math.floor(Math.random() * countries.length)];
+            }
+
+            const finalTitle = template.title.replace("{Subject}", subject).replace("{Country}", country);
+            const finalSummary = template.summary.replace("{Subject}", subject).replace("{Country}", country);
+            const category = template.cat;
+
+            return {
+                id: id,
+                source: source,
+                country: country,
+                category: category,
+                title: finalTitle,
+                summary: finalSummary,
+                detail: generateDetailedContent(subject, country),
+                image: `https://picsum.photos/seed/${seed}/400/300`,
+                bgSeed: seed,
+                isNew: !isInitial,
+                timestamp: new Date()
+            };
+        }
+
+        // --- Initialization ---
+        function init() {
+            if (!('speechSynthesis' in window)) {
+                alert("Your browser does not support text-to-speech. The site will load but audio features will be disabled.");
+            }
+
+            for(let i=0; i<8; i++) allNewsData.push(generateNewsItem(true));
+            applyFilters();
+            updateClock();
+            setInterval(updateClock, 1000);
+            
+            // NEW: Start Auto Refresh with default rate
+            startAutoRefresh();
+        }
+
+        function updateClock() {
+            const clockEl = document.getElementById('clock');
+            if(clockEl) clockEl.innerText = new Date().toLocaleTimeString();
+        }
+
+        // --- NEW: Refresh Timeline Logic ---
+        function updateRefreshRate() {
+            const select = document.getElementById('refreshRate');
+            if(select) {
+                currentRefreshRate = parseInt(select.value);
+                // Restart the timer with new rate
+                startAutoRefresh();
+            }
+        }
+
+        function startAutoRefresh() {
+            // Clear existing interval
+            if(refreshIntervalId) clearInterval(refreshIntervalId);
+
+            // Only start if toggle is ON
+            if(isAutoRefreshEnabled) {
+                refreshIntervalId = setInterval(autoRefreshNews, currentRefreshRate);
+            }
+        }
+
+        // --- Toggle Functions ---
+        function toggleAIRead() {
+            const checkbox = document.getElementById('aiReadToggle');
+            isAIReadEnabled = checkbox.checked;
+            
+            if(!isAIReadEnabled) {
+                stopAudio();
+            }
+        }
+
+        function toggleAutoRefresh() {
+            const checkbox = document.getElementById('autoRefreshToggle');
+            isAutoRefreshEnabled = checkbox.checked;
+            
+            // Visual feedback
+            const status = document.getElementById('refreshStatus');
+            if(status) {
+                if(!isAutoRefreshEnabled) {
+                    status.innerText = "PAUSED";
+                    status.classList.add('visible');
+                    setTimeout(() => status.classList.remove('visible'), 2000);
+                } else {
+                    status.innerText = "UPDATED"; // Reset text
+                }
+            }
+
+            // Start or Stop the timer
+            startAutoRefresh();
+        }
+
+        // --- Page Switching Logic ---
+        function switchPage(pageId, linkElement) {
+            document.querySelectorAll('.page-view').forEach(p => p.classList.remove('active'));
+            const target = document.getElementById(pageId);
+            if(target) target.classList.add('active');
+
+            if(linkElement) {
+                document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+                linkElement.classList.add('active');
+            } else {
+                document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+                const homeLink = document.querySelector('.nav-link');
+                if(homeLink) homeLink.classList.add('active');
+            }
+
+            if(pageId !== 'home') {
+                stopAudio();
+            }
+        }
+
+        // --- Filtering Logic ---
+        function handleCategoryChange(cat, btnElement) {
+            currentCategory = cat;
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            if(btnElement) btnElement.classList.add('active');
+            applyFilters();
+        }
+
+        function handleCountryChange() {
+            const select = document.getElementById('countrySelect');
+            currentCountry = select.value;
+            const display = document.getElementById('region-display');
+            if(display) display.innerText = currentCountry.toUpperCase();
+            applyFilters();
+        }
+
+        function applyFilters() {
+            filteredList = allNewsData.filter(item => {
+                const catMatch = currentCategory === 'All' || item.category === currentCategory;
+                const countryMatch = currentCountry === 'Global' || item.country === currentCountry;
+                return catMatch && countryMatch;
+            });
+
+            if (currentIndex >= filteredList.length) currentIndex = 0;
+            renderFilteredList();
+            
+            if (filteredList.length > 0) {
+                loadStory(0, false);
+            } else {
+                const titleEl = document.getElementById('displayTitle');
+                const sumEl = document.getElementById('displaySummary');
+                if(titleEl) titleEl.innerText = "No News Found";
+                if(sumEl) sumEl.innerText = `No news available for ${currentCategory} in ${currentCountry}. Try changing the region or category.`;
+            }
+        }
+
+        function renderFilteredList() {
+            const newsListEl = document.getElementById('newsList');
+            if(!newsListEl) return;
+            newsListEl.innerHTML = '';
+
+            if (filteredList.length === 0) {
+                newsListEl.innerHTML = '<div class="empty-state">No news found for this selection.</div>';
+                return;
+            }
+
+            filteredList.forEach((item, idx) => {
+                const el = document.createElement('div');
+                const isActive = idx === currentIndex;
+                el.className = `news-item ${isActive ? 'active' : ''} ${item.isNew ? 'new-item' : ''}`;
+                el.onclick = () => selectStory(idx);
+                el.innerHTML = `
+                    <img src="${item.image}" class="item-thumb" alt="thumb">
+                    <div class="item-content">
+                        <div class="item-meta">
+                            <span class="item-source">${item.source} • ${item.country}</span>
+                            <span class="breaking-tag">BREAKING</span>
+                        </div>
+                        <div class="item-title">${item.title}</div>
+                    </div>
+                `;
+                newsListEl.appendChild(el);
+            });
+        }
+
+        function autoRefreshNews() {
+            // Check if Auto Refresh is enabled
+            if(!isAutoRefreshEnabled) return;
+
+            const newStory = generateNewsItem(false);
+            allNewsData.unshift(newStory);
+            if(allNewsData.length > 30) allNewsData.pop();
+
+            const catMatch = currentCategory === 'All' || newStory.category === currentCategory;
+            const countryMatch = currentCountry === 'Global' || newStory.country === currentCountry;
+
+            if (catMatch && countryMatch) {
+                // Add to top of filtered list
+                filteredList.unshift(newStory);
+                if(filteredList.length > 20) filteredList.pop();
+                
+                // Load to Top (Right Pan)
+                currentIndex = 0; 
+                loadStory(0, false); // Load visual only
+                
+                renderFilteredList();
+                
+                // Scroll to top of sidebar
+                const listEl = document.getElementById('newsList');
+                if(listEl) listEl.scrollTop = 0;
+                
+                // Check AI Read toggle before auto-playing
+                if(isAIReadEnabled) {
+                    playAudio(newStory.summary);
+                }
+
+                const status = document.getElementById('refreshStatus');
+                if(status) {
+                    status.innerText = "UPDATED FEED";
+                    status.classList.add('visible');
+                    setTimeout(() => status.classList.remove('visible'), 3000);
+                }
+            }
+        }
+
+        // --- Story & Audio Logic ---
+        function selectStory(index) {
+            stopAudio();
+            
+            // Move Selected to Top
+            const selectedItem = filteredList[index];
+            filteredList.splice(index, 1);
+            filteredList.unshift(selectedItem);
+            currentIndex = 0;
+
+            closeDetailPanel(); 
+            renderFilteredList();
+            
+            const listEl = document.getElementById('newsList');
+            if(listEl) listEl.scrollTop = 0;
+
+            // Check AI Read Toggle
+            loadStory(0, isAIReadEnabled);
+        }
+
+        function loadStory(idx, autoPlay) {
+            if (!filteredList[idx]) return;
+            const item = filteredList[idx];
+            
+            const srcEl = document.getElementById('displaySource');
+            const titleEl = document.getElementById('displayTitle');
+            const sumEl = document.getElementById('displaySummary');
+            const bgEl = document.getElementById('bgLayer');
+
+            if(srcEl) srcEl.innerText = `${item.source.toUpperCase()} • ${item.country.toUpperCase()}`;
+            if(titleEl) titleEl.innerText = item.title;
+            if(sumEl) sumEl.innerText = item.summary;
+            if(bgEl) bgEl.style.backgroundImage = `url(https://picsum.photos/seed/${item.bgSeed}/1600/900)`;
+
+            if (autoPlay) playAudio(item.summary);
+        }
+
+        function openDetailPanel() {
+            if (!filteredList[currentIndex]) return;
+            const item = filteredList[currentIndex];
+            const imgEl = document.getElementById('detailImage');
+            const txtEl = document.getElementById('detailText');
+            
+            if(imgEl) imgEl.src = item.image;
+            if(txtEl) txtEl.innerHTML = item.detail;
+            
+            const panel = document.getElementById('detailPanel');
+            if(panel) panel.classList.add('active');
+        }
+
+        function closeDetailPanel() {
+            const panel = document.getElementById('detailPanel');
+            if(panel) panel.classList.remove('active');
+        }
+
+        function togglePlay() {
+            if (isPlaying) {
+                pauseAudio();
+            } else {
+                if(filteredList[currentIndex]) playAudio(filteredList[currentIndex].summary);
+            }
+        }
+
+        function playAudio(text) {
+            if (!('speechSynthesis' in window)) return;
+
+            if (synth.speaking) synth.cancel();
+            utterance = new SpeechSynthesisUtterance(text);
+            const voices = synth.getVoices();
+            const preferred = voices.find(v => v.name.includes("Google US English") || v.name.includes("Samantha"));
+            utterance.voice = preferred || voices[0];
+            utterance.rate = 1.05; 
+            utterance.pitch = 1;
+
+            utterance.onstart = () => {
+                isPlaying = true; 
+                updatePlayIcon(); 
+                const container = document.getElementById('anchorContainer');
+                if(container) container.classList.add('speaking');
+            };
+            utterance.onend = () => {
+                isPlaying = false; 
+                updatePlayIcon(); 
+                const container = document.getElementById('anchorContainer');
+                if(container) container.classList.remove('speaking');
+            };
+            utterance.onerror = (e) => {
+                console.error("Audio Error:", e);
+                isPlaying = false;
+                updatePlayIcon();
+            };
+            synth.speak(utterance);
+        }
+
+        function pauseAudio() {
+            if (synth) synth.cancel(); 
+            isPlaying = false; 
+            updatePlayIcon(); 
+            const container = document.getElementById('anchorContainer');
+            if(container) container.classList.remove('speaking');
+        }
+
+        function stopAudio() { pauseAudio(); }
+
+        function nextNews() { 
+            if(filteredList.length > 0) {
+                currentIndex = (currentIndex + 1) % filteredList.length;
+                loadStory(currentIndex, isAIReadEnabled);
+                renderFilteredList();
+            }
+        }
+        
+        function prevNews() { 
+            if(filteredList.length > 0) {
+                currentIndex = (currentIndex - 1 + filteredList.length) % filteredList.length;
+                loadStory(currentIndex, isAIReadEnabled);
+                renderFilteredList();
+            }
+        }
+
+        function updatePlayIcon() {
+            const playIc = document.getElementById('iconPlay');
+            const pauseIc = document.getElementById('iconPause');
+            
+            if(playIc && pauseIc) {
+                if (isPlaying) {
+                    playIc.style.display = 'none';
+                    pauseIc.style.display = 'block';
+                } else {
+                    playIc.style.display = 'block';
+                    pauseIc.style.display = 'none';
+                }
+            }
+        }
+
+        // --- WHATSAPP INTEGRATION FUNCTIONS ---
+        function shareStoryWhatsApp() {
+            if (!filteredList[currentIndex]) {
+                alert("Please select a news story to share.");
+                return;
+            }
+            const item = filteredList[currentIndex];
+            const text = `Check out this breaking news from NexusLive:\n\n*${item.title}*\n\n${item.summary}\n\nSource: ${item.source} (${item.country})`;
+            const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
+            window.open(url, '_blank');
+        }
+
+        function sendContactWhatsApp() {
+            const nameInput = document.getElementById('c_name');
+            const msgInput = document.getElementById('c_msg');
+            
+            const name = nameInput ? nameInput.value : '';
+            const msg = msgInput ? msgInput.value : '';
+
+            if(!name || !msg) {
+                alert("Please fill in your name and message.");
+                return;
+            }
+
+            const phoneNumber = "1234567890"; 
+            const finalMsg = `Hello NexusLive Team, my name is *${name}*. I have a question:\n\n${msg}`;
+            const url = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(finalMsg)}`;
+            
+            window.open(url, '_blank');
+        }
+
+        // Wait for DOM to be ready
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
