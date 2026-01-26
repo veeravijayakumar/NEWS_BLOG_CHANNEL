@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NexusLive | Global AI News Network</title>
+    <title>WORLD NEWSLive | Global AI News Network</title>
     <style>
         :root {
             --bg-dark: #050505;
@@ -14,12 +14,21 @@
             --text-gray: #888;
             --border: #222;
             --danger: #ff4444;
-            --panel-bg: rgba(10, 10, 10, 0.95);
+            --highlight-yellow: #ffcc00;
+            --panel-bg: rgba(10, 10, 10, 0.98);
             --whatsapp-green: #25D366;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { background: var(--bg-dark); color: var(--text-white); font-family: 'Segoe UI', Roboto, sans-serif; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
+        body { 
+            background: var(--bg-dark); 
+            color: var(--text-white); 
+            font-family: 'Segoe UI', Roboto, sans-serif; 
+            height: 100vh; 
+            overflow: hidden; 
+            display: flex; 
+            flex-direction: column; 
+        }
 
         /* --- Header & Navigation --- */
         header {
@@ -113,7 +122,7 @@
         input:checked + .slider:before { transform: translateX(16px); }
         input:focus + .slider { box-shadow: 0 0 1px var(--accent); }
 
-        /* New: Refresh Timeline Select */
+        /* Refresh Select */
         .refresh-select-wrap {
             display: flex;
             align-items: center;
@@ -135,8 +144,8 @@
         /* --- Page Layout System --- */
         .page-view {
             display: none;
-            flex:1;
-            height: calc(100vh - 70px);
+            flex: 1;
+            height: calc(100vh - 70px - 60px); /* Minus header and footer */
             overflow-y: auto;
             animation: fadeIn 0.5s ease;
         }
@@ -175,6 +184,7 @@
             grid-template-columns: 320px 1fr;
             width: 100%;
             height: 100%;
+            position: relative;
         }
 
         .sidebar {
@@ -209,23 +219,31 @@
             display: flex; gap: 10px; padding: 10px; border-radius: 8px; margin-bottom: 8px; cursor: pointer;
             transition: background 0.2s; background: #1a1a1a; border: 1px solid transparent; animation: slideIn 0.5s ease-out;
         }
-        .news-item:nth-child(1) { border-left: 3px solid var(--accent); background: #1f1f1f; }
-        
         .news-item.new-item { background: var(--new-bg); border: 1px solid var(--accent); }
         .news-item:hover { background: #222; }
-        .news-item.active { border-color: var(--accent); background: #222; box-shadow: 0 0 10px var(--accent-glow); }
+        .news-item.active { border-color: var(--highlight-yellow); background: #1f1a00; box-shadow: 0 0 10px rgba(255, 204, 0, 0.2); } /* Updated active style */
         .item-thumb { width: 80px; height: 60px; background: #333; border-radius: 4px; object-fit: cover; flex-shrink: 0; }
         .item-content { display: flex; flex-direction: column; justify-content: center; }
         .item-meta { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
         .item-source { font-size: 0.65rem; color: var(--accent); font-weight: bold; text-transform: uppercase; }
-        .breaking-tag { font-size: 0.6rem; color: var(--danger); font-weight: 900; letter-spacing: 0.5px; display: none; }
-        .news-item.new-item .breaking-tag { display: block; }
+        /* Breaking Tag Highlight (Red) */
+        .breaking-tag { 
+            font-size: 0.6rem; 
+            color: #fff; 
+            background: var(--danger); 
+            font-weight: 900; 
+            letter-spacing: 0.5px; 
+            display: none; 
+            padding: 2px 4px; 
+            border-radius: 2px;
+        }
+        .news-item.new-item .breaking-tag { display: inline-block; }
         .item-title { font-size: 0.85rem; font-weight: 600; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
         .empty-state { text-align: center; padding: 40px 20px; color: #444; font-size: 0.9rem; }
 
         /* Stage (Broadcast) */
         .stage {
-            position: relative; background: #000; overflow: hidden; display: flex; flex-direction: column;
+            position: relative; background: #000; overflow: hidden; display: fixed; flex-direction: column;
         }
         .video-bg-layer {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-size: cover;
@@ -295,14 +313,25 @@
         .play-btn { width: 50px; height: 50px; background: var(--accent); border: none; color: #000; }
         .play-btn:hover { background: #fff; }
 
-        /* Detail Panel */
+        /* ================== DETAIL PANEL - FIXED TOP ================= */
         .detail-panel {
-            position: absolute; top: 0; right: -100%; width: 60%; height: 100%; background: var(--panel-bg);
-            backdrop-filter: blur(20px); border-left: 1px solid var(--accent); z-index: 40;
-            transition: right 0.4s cubic-bezier(0.16, 1, 0.3, 1); display: flex; flex-direction: column; padding: 40px;
+            position: fixed;
+            top: 0;
+            right: 0;
+            width: 60%;
+            height: 100%;
+            background: var(--panel-bg);
+            backdrop-filter: blur(20px);
+            border-left: 1px solid var(--accent);
+            z-index: 10000;
+            display: none; /* Hidden by default */
+            flex-direction: column;
+            padding: 40px;
             box-shadow: -10px 0 50px rgba(0,0,0,0.8);
+            
+            /* Removed sliding transition to prevent "goes down" feeling */
         }
-        .detail-panel.active { right: 0; }
+        .detail-panel.active { display: flex; }
         .detail-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; padding-bottom: 20px; margin-bottom: 20px; }
         .close-btn { background: none; border: none; color: #fff; font-size: 2rem; cursor: pointer; line-height: 1; }
         .close-btn:hover { color: var(--danger); }
@@ -348,7 +377,89 @@
         }
         .submit-btn:hover { background: #128C7E; transform: translateY(-2px); }
 
-        /* Mobile Responsive */
+        /* ================= FOOTER ================= */
+        footer {
+            background: #000;
+            border-top: 1px solid var(--border);
+            padding: 20px 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            font-size: 0.8rem;
+            color: #666;
+        }
+
+        .footer-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 40px;
+        }
+
+        .footer-links {
+            display: flex;
+            gap: 20px;
+        }
+
+        .footer-link {
+            text-decoration: none;
+            color: var(--text-gray);
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .footer-link:hover { color: var(--accent); text-decoration: underline; }
+
+        .footer-bottom {
+            border-top: 1px solid #222;
+            padding-top: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        /* ROUTING LOG - FOR USER REFERENCE */
+        .routing-log-title {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-gray);
+            margin-bottom: 10px;
+            font-family: monospace;
+        }
+
+        .log-console {
+            background: #000;
+            border: 1px solid #333;
+            padding: 15px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            color: #00ff9d; /* Log text color */
+            height: 150px;
+            overflow-y: auto;
+            font-size: 0.75rem;
+        }
+        .log-entry {
+            margin-bottom: 5px;
+            padding-bottom: 5px;
+            border-bottom: 1px dashed #222;
+        }
+        .log-time { color: #888; font-size: 0.7rem; margin-right: 10px; }
+
+
+          .tagline {
+            color: #00e5ff;
+            font-size: 20px;
+            letter-spacing: 1px;
+            padding: 15px 25px;
+            border: 1px solid #00e5ff;
+            border-radius: 8px;
+            box-shadow: 0 0 15px rgba(0, 229, 255, 0.6);
+            background: linear-gradient(90deg, #00e5ff, #7c4dff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+
+        /* MOBILE RESPONSIVE */
         @media (max-width: 900px) {
             .dashboard-container { grid-template-columns: 1fr; grid-template-rows: 1fr 1fr; }
             .sidebar { order: 2; border-top: 1px solid var(--border); }
@@ -356,13 +467,13 @@
             .anchor-wrapper { width: 150px; height: 200px; margin: 0 auto; }
             .news-headline { font-size: 1.8rem; }
             .brief-box { margin: 20px auto; }
+            
+            /* Detail Panel Adjustment for Mobile */
             .detail-panel { width: 90%; }
             .detail-text { column-count: 1; }
-            .whatsapp-float { width: 50px; height: 50px; bottom: 20px; right: 20px; font-size: 25px; }
             
-            /* Responsive Header Controls */
-            .controls-wrapper { flex-direction: column; gap: 10px; align-items: flex-end; }
-            .toggle-wrap, .refresh-select-wrap { justify-content: flex-end; }
+            .footer-content { flex-direction: column; gap: 10px; align-items: flex-start; }
+            .log-console { height: 100px; }
         }
     </style>
 </head>
@@ -372,7 +483,7 @@
     <header>
         <div class="brand" onclick="switchPage('home')">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1 4-10z"/></svg>
-            Nexus<span>Live</span>
+            WORLD NEWS<span>Live</span>
         </div>
         <nav>
             <a href="#" class="nav-link active" onclick="switchPage('home', this)">Home</a>
@@ -398,7 +509,7 @@
                 </div>
             </label>
 
-            <!-- Toggle 2: Auto Refresh + Dropdown -->
+            <!-- Toggle 2: Auto Refresh -->
             <div class="refresh-select-wrap" title="Set Refresh Speed">
                 <label class="toggle-wrap" style="gap: 4px;">
                     <span class="toggle-label">Auto Refresh</span>
@@ -457,12 +568,12 @@
                 <div class="broadcast-content">
                     <div class="news-info">
                         <div class="info-tag" id="displaySource">REUTERS</div>
-                        <h1 class="news-headline" id="displayTitle">Welcome to NexusLive AI</h1>
+                        <h1 class="news-headline" id="displayTitle">Welcome to WORLD NEWSLive AI</h1>
                         
                         <div class="brief-box">
                             <div class="brief-title">Brief Summary</div>
                             <div class="brief-text" id="displaySummary">
-                                Select a region and category to begin the localized AI broadcast.
+                                Select a region and category to begin localized AI broadcast.
                             </div>
                             
                             <!-- Action Buttons -->
@@ -485,26 +596,15 @@
                             <img src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80" class="anchor-img" id="anchorImg" alt="AI Anchor">
                             <div class="audio-overlay">
                                 <div class="bar"></div><div class="bar"></div><div class="bar"></div>
-                                <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+                                <div class="bar"></div><div class="bar"></div><div class="bar"></div>
                             </div>
                         </div>
-                        <div class="anchor-name">Sarah Nexus</div>
+                        <div class="anchor-name">Sarah WORLD NEWS</div>
                         <div class="anchor-role">AI PRESENTER</div>
                     </div>
                 </div>
 
-                <!-- Detailed Panel -->
-                <div class="detail-panel" id="detailPanel">
-                    <div class="detail-header">
-                        <h2>Deep Analysis</h2>
-                        <button class="close-btn" onclick="closeDetailPanel()">×</button>
-                    </div>
-                    <img src="" id="detailImage" class="detail-image" alt="Detail">
-                    <div class="detail-content">
-                        <div id="detailText" class="detail-text"></div>
-                    </div>
-                </div>
-
+                <!-- Controls Bar -->
                 <div class="controls-bar">
                     <button class="ctrl-btn" onclick="prevNews()" title="Previous Story">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
@@ -524,14 +624,20 @@
     <!-- PAGE: ABOUT -->
     <div id="about" class="page-view">
         <div class="page-content-wrapper">
-            <h1 class="page-header">About NexusLive</h1>
+            <h1 class="page-header">About WORLD NEWS Live</h1>
             <div class="text-section">
-                <p>NexusLive is a next-generation AI-powered news aggregator that revolutionizes how you consume information. By consolidating feeds from global sources—Reuters, BBC, Al Jazeera, and more—we create a unified, real-time news experience.</p>
+                <p>We are a global digital news platform committed to delivering instant, accurate, and unbiased world news. Our mission is to keep people informed with real-time updates from trusted sources across the globe.</p>
                 <p>Our core technology utilizes advanced neural networks to synthesize voiceovers and generate contextual imagery on the fly, providing a "Live TV" experience entirely within your browser. We believe in democratizing access to information, offering personalized feeds based on your location and interests.</p>
+                <p>From breaking international headlines to technology, business, politics, sports, and trending stories, we consolidate news from multiple reliable channels and present it in one easy-to-access platform.</p>
+                <p>Our focus is on speed, credibility, and clarity — ensuring that our readers stay updated anytime, anywhere. We believe informed people make better decisions, and we strive to be a reliable source in a fast-moving world.</p>
+                <p>Stay connected. Stay informed. Stay ahead.</p>
+                <p class="tagline">For Further Connect : info@exceltechnolgy.info</p>
             </div>
         </div>
     </div>
 
+
+   
     <!-- PAGE: TESTIMONIALS -->
     <div id="testimonials" class="page-view">
         <div class="page-content-wrapper">
@@ -540,7 +646,7 @@
                 <div class="card">
                     <div class="stars">★★★★★</div>
                     <div class="quote">"The AI reader is incredibly realistic. I love how I can just select a country and get local news instantly. The brief analysis feature is a lifesaver."</div>
-                    <div class="author">- Alex D., USA</div>
+                    <div class="author">- Melcose D., USA</div>
                 </div>
                 <div class="card">
                     <div class="stars">★★★★★</div>
@@ -551,6 +657,11 @@
                     <div class="stars">★★★★☆</div>
                     <div class="quote">"Great interface and WhatsApp sharing feature makes it easy to send news to my family. Very impressed."</div>
                     <div class="author">- Michael R., UK</div>
+                </div>
+                <div class="card">
+                    <div class="stars">★★★★☆</div>
+                    <div class="quote">"Very Great information and All News channel into one Places holder. Very usefull and Save the timings."</div>
+                    <div class="author">- Vijayakumar Veerappan., UK</div>
                 </div>
             </div>
         </div>
@@ -579,6 +690,44 @@
         </div>
     </div>
 
+    <!-- FIXED DETAIL PANEL WITH POPULATED CONTENT -->
+    <div class="detail-panel" id="detailPanel">
+        <div class="detail-header">
+            <h2>Deep Analysis</h2>
+            <button class="close-btn" onclick="closeDetailPanel()">×</button>
+        </div>
+        <img src="" id="detailImage" class="detail-image" alt="Detail">
+        <div class="detail-content">
+            <div id="detailText" class="detail-text"></div>
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer>
+        <div class="footer-content">
+            <div class="footer-links">
+                <a href="#" class="footer-link" onclick="switchPage('home')">Home</a>
+                <a href="#" class="footer-link" onclick="switchPage('about')">About</a>
+                <a href="#" class="footer-link" onclick="switchPage('testimonials')">Testimonials</a>
+                <a href="#" class="footer-link" onclick="switchPage('contact')">Contact</a>
+            </div>
+
+            <!-- <div style="flex: 1; display: flex; flex-direction: column; gap: 10px; width: 100%;">
+
+                <div class="routing-log-title">System Logs</div>
+                <div class="log-console" id="routingLog">
+                    <div class="log-entry"><span class="log-time">00:00:01</span> System initialized.</div>
+                </div>
+            </div> -->
+
+            <div class="footer-bottom">
+                &copy; 2024 Excel Technolgy. All rights reserved.
+                <p>Email: Info@exceltechnolgy.info</p>
+                <span style="margin-left: auto;">| <a href="#" style="color: var(--accent); text-decoration: none;">Privacy Policy</a></span>
+            </div>
+        </div>
+    </footer>
+
     <!-- Floating WhatsApp Icon -->
     <a href="https://wa.me/1234567890" class="whatsapp-float" target="_blank">
         <svg width="35" height="35" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.008-.57-.008-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
@@ -596,11 +745,10 @@
         let currentCountry = 'Global';
         let currentCategory = 'All';
 
-        // NEW: Toggle State Variables
-        let isAIReadEnabled = true; // AI Voice On/Off
-        let isAutoRefreshEnabled = true; // Feed Refresh On/Off
-        let refreshIntervalId = null; // To track the timer
-        let currentRefreshRate = 10000; // Default 10 seconds
+        let isAIReadEnabled = true; 
+        let isAutoRefreshEnabled = true; 
+        let refreshIntervalId = null; 
+        let currentRefreshRate = 10000; 
 
         // --- Data Generators ---
         const sources = ["Reuters", "BBC", "CNN", "Al Jazeera", "AP News", "Bloomberg", "TechCrunch", "ESPN", "NDTV", "NHK", "DW"];
@@ -616,20 +764,66 @@
 
         const subjects = ["AI Security", "Quantum Computing", "Climate Action", "Renewable Energy", "Cyber Defense", "Space Exploration", "Fintech", "Robotics"];
 
-        function generateDetailedContent(subject, country) {
+        // --- Content Generators (Smart Population based on Selection) ---
+        function generateTechContent(subject) {
             return `
-                <strong>Contextual Overview:</strong><br>
-                The recent developments regarding <em>${subject}</em> in ${country} have sent shockwaves through the industry. Experts believe this is not just a temporary trend, but a fundamental shift in how the region approaches modern infrastructure. <br><br>
-                
-                <strong>Regional Impact:</strong><br>
-                At its core, the advancement in ${subject} solves a decade-old problem related to efficiency and scalability in ${country}. By leveraging new algorithms, engineers have managed to reduce latency by 40%. This opens up possibilities for real-time applications that were previously thought impossible. <br><br>
-
-                <strong>Economic Outlook:</strong><br>
-                Market analysts are forecasting a 15% growth in the sector over the next fiscal year specifically in ${country}. Venture capital firms have already begun pouring billions into startups focused on ${subject}. However, regulatory bodies are warning of potential monopoly concerns if consolidation continues at this pace. <br><br>
-
-                <strong>What's Next:</strong><br>
-                As we look to the future, the integration of ${subject} into daily consumer electronics is the next logical step. Major corporations are expected to announce partnerships by Q3. For the average consumer, this means smarter, faster, and more integrated experiences by the end of the decade.
+                <strong>Technical Specifications:</strong><br>
+                The new standard for <em>${subject}</em> features a 5nm process architecture, allowing for significantly higher processing speeds. Early benchmarks show a 40% increase in AI computational tasks. <br><br>
+                <strong>Market Impact:</strong><br>
+                Experts predict this will revolutionize the <em>${subject}</em> sector, potentially displacing older models within the next fiscal year. Investors are advised to watch closely as major players pivot their R&D strategy.
             `;
+        }
+
+        function generateBusinessContent(subject) {
+            return `
+                <strong>Market Analysis:</strong><br>
+                The surge in <em>${subject}</em> adoption has created a new sub-sector worth billions of dollars. Supply chains are restructuring to accommodate the demand. <br><br>
+                <strong>Forecasts:</strong><br>
+                Financial analysts project a sustained growth rate of 15% CAGR over the next 5 years driven by <em>${subject}</em> innovation.
+            `;
+        }
+
+        function generateSportsContent(subject) {
+            return `
+                <strong>Match Highlights:</strong><br>
+                The <em>${subject}</em> championship witnessed a record-breaking viewership. The winning strategy focused on rapid counter-attacks. <br><br>
+                <strong>Expert Commentary:</strong><br>
+                "This changes the way <em>${subject}</em> is played globally," said our senior analyst.
+            `;
+        }
+
+        function generateWorldContent(country) {
+            return `
+                <strong>Regional Context:</strong><br>
+                In <em>${country}</em>, this news is having a ripple effect across local markets. Policy makers are responding with updated regulations to maintain stability. <br><br>
+                <strong>Global Outlook:</strong><br>
+                The impact is expected to stabilize the region's economic standing and foster new cross-border partnerships.
+            `;
+        }
+
+        function generateDetailedContent(subject, country, category) {
+            // Logic to populate Detail Panel based on filters
+            let content = '';
+
+            if (category === 'World') {
+                content = generateWorldContent(country);
+            } else if (category === 'Tech') {
+                content = generateTechContent(subject);
+            } else if (category === 'Business') {
+                content = generateBusinessContent(subject);
+            } else if (category === 'Sports') {
+                content = generateSportsContent(subject);
+            } else {
+                // Default Generic if specific category not found
+                content = `
+                <strong>Key Details:</strong><br>
+                <em>${subject}</em> has significant implications for the industry. Experts suggest staying tuned for further updates. <br><br>
+                <strong>Timeline:</strong><br>
+                Initial rollout is scheduled for Q3 2024, with full deployment expected by Q1 2025.
+                `;
+            }
+
+            return content;
         }
 
         function generateNewsItem(isInitial = false) {
@@ -655,7 +849,8 @@
                 category: category,
                 title: finalTitle,
                 summary: finalSummary,
-                detail: generateDetailedContent(subject, country),
+                // Storing the generated HTML for the detail panel
+                detailContent: generateDetailedContent(subject, country, category),
                 image: `https://picsum.photos/seed/${seed}/400/300`,
                 bgSeed: seed,
                 isNew: !isInitial,
@@ -674,8 +869,10 @@
             updateClock();
             setInterval(updateClock, 1000);
             
-            // NEW: Start Auto Refresh with default rate
             startAutoRefresh();
+            
+            // Start Routing Log Simulation
+            startRoutingLog();
         }
 
         function updateClock() {
@@ -683,21 +880,45 @@
             if(clockEl) clockEl.innerText = new Date().toLocaleTimeString();
         }
 
-        // --- NEW: Refresh Timeline Logic ---
+        // --- Routing Log Logic ---
+        function startRoutingLog() {
+            setInterval(() => {
+                const logEl = document.getElementById('routingLog');
+                if(logEl) {
+                    const now = new Date();
+                    const time = now.toLocaleTimeString([], { hour12: false });
+                    const entry = document.createElement('div');
+                    entry.className = 'log-entry';
+                    
+                    // Simulate Status
+                    let statusText = "Connected to Global Gateway";
+                    if (currentCountry !== 'Global') {
+                        statusText = `Routing to Regional Hub [${currentCountry}]...`;
+                    // Simulate "Live Connection" latency based on region
+                        const ping = Math.floor(Math.random() * 40) + 10; 
+                        if (currentCountry === 'USA' && ping < 20) statusText += ' (Low Latency)';
+                        if (currentCountry === 'India') statusText += ' (Optimizing Route)';
+                    }
+                    
+                    entry.innerHTML = `<span class="log-time">${time}</span> ${statusText}`;
+                    
+                    logEl.appendChild(entry);
+                    logEl.scrollTop = logEl.scrollHeight; // Auto scroll to bottom
+                }
+            }, 2000); // Update log every 2 seconds
+        }
+
         function updateRefreshRate() {
             const select = document.getElementById('refreshRate');
             if(select) {
                 currentRefreshRate = parseInt(select.value);
-                // Restart the timer with new rate
                 startAutoRefresh();
             }
         }
 
         function startAutoRefresh() {
-            // Clear existing interval
             if(refreshIntervalId) clearInterval(refreshIntervalId);
 
-            // Only start if toggle is ON
             if(isAutoRefreshEnabled) {
                 refreshIntervalId = setInterval(autoRefreshNews, currentRefreshRate);
             }
@@ -717,6 +938,9 @@
             const checkbox = document.getElementById('autoRefreshToggle');
             isAutoRefreshEnabled = checkbox.checked;
             
+            // Log Routing Change
+            addLogEntry(`Route Change: ${currentCountry} -> Region Server`);
+            
             // Visual feedback
             const status = document.getElementById('refreshStatus');
             if(status) {
@@ -725,27 +949,44 @@
                     status.classList.add('visible');
                     setTimeout(() => status.classList.remove('visible'), 2000);
                 } else {
-                    status.innerText = "UPDATED"; // Reset text
+                    status.innerText = "UPDATED"; 
                 }
             }
-
-            // Start or Stop the timer
             startAutoRefresh();
+        }
+
+        function addLogEntry(text) {
+            const logEl = document.getElementById('routingLog');
+            if(logEl) {
+                const now = new Date().toLocaleTimeString([], {hour12: false});
+                const entry = document.createElement('div');
+                entry.className = 'log-entry';
+                entry.innerHTML = `<span class="log-time">${now}</span> ${text}`;
+                logEl.appendChild(entry);
+                logEl.scrollTop = logEl.scrollHeight;
+            }
         }
 
         // --- Page Switching Logic ---
         function switchPage(pageId, linkElement) {
+            // Hide all pages
             document.querySelectorAll('.page-view').forEach(p => p.classList.remove('active'));
+            // Show target page
             const target = document.getElementById(pageId);
             if(target) target.classList.add('active');
 
+            // Update Nav
             if(linkElement) {
-                document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+                document.querySelectorAll('.nav-link, .footer-link').forEach(l => l.classList.remove('active'));
                 linkElement.classList.add('active');
             } else {
-                document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
                 const homeLink = document.querySelector('.nav-link');
                 if(homeLink) homeLink.classList.add('active');
+            }
+
+            // IMPORTANT: Close Detail Panel if leaving Home
+            if(pageId !== 'home') {
+                closeDetailPanel();
             }
 
             if(pageId !== 'home') {
@@ -766,6 +1007,10 @@
             currentCountry = select.value;
             const display = document.getElementById('region-display');
             if(display) display.innerText = currentCountry.toUpperCase();
+            
+            // Log Routing Update
+            addLogEntry(`User Selection: Region [${currentCountry}]`);
+            
             applyFilters();
         }
 
@@ -780,12 +1025,13 @@
             renderFilteredList();
             
             if (filteredList.length > 0) {
+                // Default load top story
                 loadStory(0, false);
             } else {
                 const titleEl = document.getElementById('displayTitle');
                 const sumEl = document.getElementById('displaySummary');
                 if(titleEl) titleEl.innerText = "No News Found";
-                if(sumEl) sumEl.innerText = `No news available for ${currentCategory} in ${currentCountry}. Try changing the region or category.`;
+                if(sumEl) sumEl.innerText = `No news available for ${currentCategory} in ${currentCountry}. Try changing to region or category.`;
             }
         }
 
@@ -834,9 +1080,9 @@
                 filteredList.unshift(newStory);
                 if(filteredList.length > 20) filteredList.pop();
                 
-                // Load to Top (Right Pan)
+                // Move to top and load
                 currentIndex = 0; 
-                loadStory(0, false); // Load visual only
+                loadStory(0, false); 
                 
                 renderFilteredList();
                 
@@ -844,11 +1090,6 @@
                 const listEl = document.getElementById('newsList');
                 if(listEl) listEl.scrollTop = 0;
                 
-                // Check AI Read toggle before auto-playing
-                if(isAIReadEnabled) {
-                    playAudio(newStory.summary);
-                }
-
                 const status = document.getElementById('refreshStatus');
                 if(status) {
                     status.innerText = "UPDATED FEED";
@@ -902,7 +1143,10 @@
             const txtEl = document.getElementById('detailText');
             
             if(imgEl) imgEl.src = item.image;
-            if(txtEl) txtEl.innerHTML = item.detail;
+            if(txtEl) {
+                // Inject the pre-generated content dynamically
+                txtEl.innerHTML = item.detailContent;
+            }
             
             const panel = document.getElementById('detailPanel');
             if(panel) panel.classList.add('active');
@@ -927,6 +1171,7 @@
             if (synth.speaking) synth.cancel();
             utterance = new SpeechSynthesisUtterance(text);
             const voices = synth.getVoices();
+            // Default to first available voice if preferred not found
             const preferred = voices.find(v => v.name.includes("Google US English") || v.name.includes("Samantha"));
             utterance.voice = preferred || voices[0];
             utterance.rate = 1.05; 
@@ -1000,7 +1245,7 @@
                 return;
             }
             const item = filteredList[currentIndex];
-            const text = `Check out this breaking news from NexusLive:\n\n*${item.title}*\n\n${item.summary}\n\nSource: ${item.source} (${item.country})`;
+            const text = `Check out this breaking news from WORLD NEWSLive:\n\n*${item.title}*\n\n${item.summary}\n\nSource: ${item.source} (${item.country})`;
             const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
             window.open(url, '_blank');
         }
@@ -1018,7 +1263,7 @@
             }
 
             const phoneNumber = "1234567890"; 
-            const finalMsg = `Hello NexusLive Team, my name is *${name}*. I have a question:\n\n${msg}`;
+            const finalMsg = `Hello WORLD NEWSLive Team, my name is *${name}*. I have a question:\n\n${msg}`;
             const url = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(finalMsg)}`;
             
             window.open(url, '_blank');
